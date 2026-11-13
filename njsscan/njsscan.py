@@ -1,6 +1,7 @@
 # -*- coding: utf_8 -*-
 """The nodejsscan cli: njsscan."""
 from linecache import getline
+import re
 
 from libsast import (
     Scanner,
@@ -12,6 +13,21 @@ from njsscan.utils import (
     get_config,
     read_missing_controls,
 )
+
+IGNORE_COMMENT = 'njsscan-ignore:'
+
+
+def get_ignored_rule_ids(text):
+    """Extract the exact rule IDs listed in njsscan-ignore comments."""
+    ignored = set()
+    if not text:
+        return ignored
+    for line in text.splitlines():
+        if IGNORE_COMMENT not in line:
+            continue
+        _, ids = line.split(IGNORE_COMMENT, 1)
+        ignored.update(re.findall(r'[A-Za-z0-9_-]+', ids))
+    return ignored
 
 
 class NJSScan:
@@ -135,10 +151,11 @@ class NJSScan:
     def suppress_pm_comments(self, obj, rule_id):
         """Suppress pattern matcher."""
         file_path = obj['file_path']
-        lines = obj['match_lines']
-        match_line = getline(file_path, lines[0])
-        if 'njsscan-ignore:' in match_line and rule_id in match_line:
-            return True
+        start, end = obj['match_lines']
+        for lineno in range(start, end + 1):
+            match_line = getline(file_path, lineno)
+            if rule_id in get_ignored_rule_ids(match_line):
+                return True
         return False
 
     def post_ignore_files(self):
@@ -151,7 +168,7 @@ class NJSScan:
             tmp_files = files.copy()
             for file in files:
                 mstr = file.get('match_string')
-                if 'njsscan-ignore:' in mstr and rule_id in mstr:
+                if rule_id in get_ignored_rule_ids(mstr):
                     tmp_files.remove(file)
                 if len(tmp_files) == 0:
                     del_keys.add(rule_id)
