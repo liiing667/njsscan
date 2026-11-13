@@ -86,6 +86,25 @@ njsscan: v0.1.9 | Ajin Abraham | opensecurity.in
 
 **nodejsscan**, built on top of **njsscan** provides a full fledged vulnerability management user interface along with other nifty integrations.
 
+## Report Redaction
+
+Hardcoded credential rules (such as `node_secret`, `node_password` and
+`node_api_key`) report the offending source line as the match snippet. To
+stop a discovered secret from being written a second time into a CI
+artifact, every machine-readable report (`--json`, `--sarif`,
+`--sonarqube`, `--defectdojo` and `--gitlab-sast`) passes through a
+shared redaction boundary before serialization.
+
+- Quoted string literals inside `match_string` are replaced with
+  `***REDACTED***`, keeping the surrounding code readable; snippets from
+  credential rules without a recognizable literal are masked entirely.
+- Values of sensitive metadata keys (names containing `secret`,
+  `password`, `api_key`, `token` or `credential`) are masked as well.
+- Rule ids, file paths, line/column positions, severity and the rule
+  description/summary are preserved unchanged.
+- Redaction works on a deep copy, so the Python API result and the
+  console/HTML diagnostics still print the raw snippet for local triage.
+
 ![nodejsscan web ui](https://user-images.githubusercontent.com/4301109/83994121-74fe6500-a923-11ea-9ad7-012113f1bb12.png)
 
 See [nodejsscan](https://github.com/ajinabraham/nodejsscan)
@@ -316,6 +335,5 @@ docker run -v /path-to-source-dir:/src opensecurity/njsscan /src
 docker build -t njsscan .
 docker run -v /path-to-source-dir:/src njsscan /src
 ```
-
 
 

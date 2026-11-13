@@ -2,6 +2,7 @@
 """Sonarqube output format."""
 
 from njsscan.formatters.json_out import json_output
+from njsscan.redaction import redact_scan_results
 
 
 def get_sonarqube_issue(njsscan_issue):
@@ -45,6 +46,7 @@ def get_sonarqube_issue(njsscan_issue):
 
 def sonarqube_output(outfile, scan_results, version):
     """Sonarqube JSON Output."""
+    scan_results = redact_scan_results(scan_results)
     sonarqube_issues = []
     for i in ['nodejs', 'templates']:
         for k, v in scan_results[i].items():

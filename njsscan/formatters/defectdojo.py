@@ -5,6 +5,7 @@ import re
 from datetime import date
 
 from njsscan.formatters.json_out import json_output
+from njsscan.redaction import redact_scan_results
 
 SEVERITY_MAPPING = {
     'ERROR': 'High',
@@ -94,6 +95,7 @@ def get_defectdojo_findings(rule_id, issue):
 
 def defectdojo_output(outfile, scan_results, version):
     """Emit DefectDojo Generic Findings Import JSON."""
+    scan_results = redact_scan_results(scan_results)
     findings = []
     for section in ('nodejs', 'templates'):
         for rule_id, issue in scan_results.get(section, {}).items():

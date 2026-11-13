@@ -15,6 +15,8 @@ import sarif_om as om
 
 from jschema_to_python.to_json import to_json
 
+from njsscan.redaction import redact_scan_results
+
 TS_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 
@@ -111,6 +113,7 @@ def create_result(rule, rule_index, issue_dict, locations):
 
 
 def sarif_output(outfile, scan_results, njsscan_version):
+    scan_results = redact_scan_results(scan_results)
     log = om.SarifLog(
         schema_uri=('https://raw.githubusercontent.com/'
                     'oasis-tcs/sarif-spec/master/Schemata/'

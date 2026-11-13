@@ -2,12 +2,15 @@
 """JSON output format."""
 import json
 
+from njsscan.redaction import redact_scan_results
+
 
 def json_output(outfile, scan_results, version):
     """JSON Output."""
-    scan_results['njsscan_version'] = version
+    safe_results = redact_scan_results(scan_results)
+    safe_results['njsscan_version'] = version
     jout = json.dumps(
-        scan_results,
+        safe_results,
         sort_keys=True,
         indent=2,
         separators=(',', ': '))

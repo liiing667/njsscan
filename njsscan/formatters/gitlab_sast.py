@@ -14,6 +14,7 @@ import json
 import re
 
 from njsscan.formatters.sarif import format_rule_name
+from njsscan.redaction import redact_scan_results
 
 # Widely supported GitLab security-report schema version
 SCHEMA_VERSION = '15.0.4'
@@ -223,6 +224,7 @@ def build_scan(version, start_time, end_time, status='success'):
 
 def gitlab_sast_output(outfile, scan_results, version):
     """Write or print a GitLab SAST report."""
+    scan_results = redact_scan_results(scan_results)
     now = datetime.now(timezone.utc).strftime(TS_FORMAT)
     status = 'failure' if scan_results.get('errors') else 'success'
     report = {
